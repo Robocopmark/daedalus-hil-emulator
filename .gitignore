@@ -1,0 +1,21 @@
+cat << 'EOF' > .gitignore
+# Python Virtual Environments & Cache
+.venv/
+__pycache__/
+*.pyc
+
+# C/C++ Compiled Objects
+*.ko
+*.o
+
+# C/C++ Compiled Executables
+robostride_core
+hil_monitor
+
+# OS Generated Files (Windows/Mac)
+.DS_Store
+Thumbs.db
+
+# IDEs / Editors
+.vscode/
+EOF

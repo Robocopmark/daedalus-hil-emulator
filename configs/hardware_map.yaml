@@ -1,0 +1,11 @@
+cat << 'EOF' > configs/hardware_map.yaml
+# Hardware Pinout & ID Configuration Mapping
+# ------------------------------------------
+# RobStride 06 QDD
+motor_can_id: 0x7F
+baud_rate: 921600
+
+# ELEGOO Mega Fault Relay
+relay_pin: 7
+serial_port: "/dev/ttyACM0"
+EOF
