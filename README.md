@@ -1,5 +1,10 @@
 # 🤖 RobStride QDD to Linux HIL Bridge
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **A bare-metal C++ & Python teleoperation bridge for Seeed Studio RobStride/Cybergear actuators, bypassing proprietary USB-to-CAN firmware on embedded Linux (Jetson Orin).**
+
+> ⚠️ **Disclaimer:** High-torque QDD actuators can cause physical injury or hardware damage if misconfigured. This project uses reverse-engineered protocols. Keep hands clear of the motor during initialization and ensure your 24V power supply has an emergency stop (E-stop) switch.
 
 ## 📖 Overview
 Integrating high-torque QDD (Quasi-Direct Drive) actuators into embedded Linux Hardware-in-the-Loop (HIL) systems frequently hits two major roadblocks:
@@ -21,7 +26,7 @@ This repository provides a reverse-engineered, bare-metal solution. By treating 
 
 The GD32 ARM Cortex-M chip inside the official Seeed Studio USB-to-CAN adapter does not parse standard SLCAN (e.g., `T0300007F8000000000...`). It uses a proprietary 17-byte binary sequence wrapped in AT command headers.
 
-**Baud Rate:** `921600`
+**Baud Rate:** `921600`  
 **Frame Format:** 17 Raw Bytes
 
 | Byte Index | Purpose | Example / Value |
@@ -54,3 +59,56 @@ Connect the 24V supply to the actuator, wire the CAN_H/CAN_L lines to the USB ad
 ```bash
 ls /dev/ttyUSB*
 # Should output: /dev/ttyUSB0
+```
+
+### 2. Build the C++ Emulation Core
+Clone this repository and build the Docker container. This encapsulates the `g++ -O3` toolchain and runtime environment.
+```bash
+git clone [https://github.com/YOUR_USERNAME/daedalus-hil-emulator.git](https://github.com/YOUR_USERNAME/daedalus-hil-emulator.git)
+cd daedalus-hil-emulator
+sudo docker build -t robostride-hil-core .
+```
+
+### 3. Run the Containerized Engine
+Pass the physical USB device through the container boundary. The motor will wake up, execute a 1.5-second closed-loop jog forward, and safely disable.
+```bash
+sudo docker run --rm --device=/dev/ttyUSB0 robostride-hil-core
+```
+
+---
+
+## 🎮 DualSense Teleoperation (Windows / Host)
+
+To manually drive the actuator using a PS5 controller, use the Python HIL bridge. This script dynamically calculates the 16-bit offset payload based on analog stick input.
+
+```bash
+pip install pygame pyserial
+```
+
+Modify `surgeon_console.py` to match your active COM port, then execute:
+```bash
+python src/python/drivers/surgeon_console.py
+```
+
+---
+
+## 📂 Repository Architecture
+```text
+daedalus-hil-emulator/
+├── Dockerfile
+├── README.md
+├── src/
+│   ├── cpp/
+│   │   ├── drivers/robostride_core.cpp    # Jetson POSIX Binary Driver
+│   │   └── core/hil_fault_monitor.cpp     # Arduino Fault Injection Monitor
+│   └── python/
+│       └── drivers/surgeon_console.py     # DualSense Teleoperation Engine
+└── configs/
+    └── hardware_map.yaml
+```
+
+## 🤝 Contributing
+Pull requests are welcome. If you map the 16-bit hexadecimal payloads for specific PID tuning or phase current limits, please open an issue with your packet captures.
+
+## 📄 License
+This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
